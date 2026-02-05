@@ -1,4 +1,4 @@
-import { Lang, Translation } from './types';
+import { Lang, Translation } from './types.ts';
 
 export const BASE_DATE_TIMESTAMP = new Date('2025-02-05T12:00:00').getTime();
 export const BASE_INDEX_VALUE = 1000; // Starting value of ETF on Base Date

@@ -6,13 +6,15 @@ import {
   Tooltip, 
   ResponsiveContainer, 
   Bar, 
+  Area,
   CartesianGrid,
   ReferenceLine
 } from 'recharts';
-import { CandleData } from '../types';
+import { CandleData } from '../types.ts';
 
 interface CandleChartProps {
   data: CandleData[];
+  type?: 'candle' | 'line';
   width?: number | string;
   height?: number | string;
 }
@@ -46,7 +48,7 @@ const CandleStickShape = (props: any) => {
   // Draw wicks from High(y) to Low(y+height)
   // Center the candle body within the available slot width
   // Limit max width for that professional "thin" look even if data is sparse
-  const candleWidth = Math.min(width - 2, 12); 
+  const candleWidth = Math.min(width - 2, 8); 
   const xBody = x + (width - candleWidth) / 2;
   const cx = x + width / 2;
 
@@ -66,17 +68,21 @@ const CustomTooltip = ({ active, payload }: any) => {
     return (
       <div className="bg-binance-black border border-binance-gray p-2 rounded shadow-lg text-xs font-mono z-50">
         <p className="text-binance-text">{new Date(data.time).toLocaleTimeString()}</p>
-        <p className="text-binance-text">O: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.open.toFixed(2)}</span></p>
-        <p className="text-binance-text">H: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.high.toFixed(2)}</span></p>
-        <p className="text-binance-text">L: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.low.toFixed(2)}</span></p>
-        <p className="text-binance-text">C: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.close.toFixed(2)}</span></p>
+        <p className="text-binance-text">Price: <span className="text-binance-light">{data.close.toFixed(2)}</span></p>
+        {data.open !== undefined && (
+          <>
+            <p className="text-binance-text">O: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.open.toFixed(2)}</span></p>
+            <p className="text-binance-text">H: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.high.toFixed(2)}</span></p>
+            <p className="text-binance-text">L: <span className={data.open < data.close ? "text-binance-green" : "text-binance-red"}>{data.low.toFixed(2)}</span></p>
+          </>
+        )}
       </div>
     );
   }
   return null;
 };
 
-const CandleChart: React.FC<CandleChartProps> = ({ data, width = "100%", height = 400 }) => {
+const CandleChart: React.FC<CandleChartProps> = ({ data, type = 'candle', width = "100%", height = 400 }) => {
   // Pre-process data to include the full range [low, high] for the Bar component
   const chartData = useMemo(() => {
     return data.map(d => ({
@@ -107,6 +113,12 @@ const CandleChart: React.FC<CandleChartProps> = ({ data, width = "100%", height 
   return (
     <ResponsiveContainer width={width as any} height={height as any}>
       <ComposedChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#FCD535" stopOpacity={0.2}/>
+            <stop offset="95%" stopColor="#FCD535" stopOpacity={0}/>
+          </linearGradient>
+        </defs>
         <CartesianGrid stroke="#2B3139" strokeDasharray="3 3" vertical={false} />
         <XAxis 
           dataKey="time" 
@@ -130,13 +142,23 @@ const CandleChart: React.FC<CandleChartProps> = ({ data, width = "100%", height 
         />
         <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#848E9C', strokeDasharray: '3 3' }} />
         
-        {/* maxBarSize ensures even if we only have 1 data point, it doesn't fill the whole screen */}
-        <Bar 
-          dataKey="candleRange" 
-          shape={<CandleStickShape />} 
-          isAnimationActive={false} 
-          maxBarSize={15} 
-        />
+        {type === 'line' ? (
+          <Area 
+            type="monotone" 
+            dataKey="close" 
+            stroke="#FCD535" 
+            fill="url(#colorGradient)" 
+            strokeWidth={2}
+            isAnimationActive={false}
+          />
+        ) : (
+          <Bar 
+            dataKey="candleRange" 
+            shape={<CandleStickShape />} 
+            isAnimationActive={false} 
+            maxBarSize={15} 
+          />
+        )}
         
         {/* Current Price Line */}
         {data.length > 0 && (

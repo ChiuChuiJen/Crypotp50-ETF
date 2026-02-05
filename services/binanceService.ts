@@ -1,4 +1,4 @@
-import { TickerData } from '../types';
+import { TickerData } from '../types.ts';
 
 const BASE_API = 'https://api.binance.com/api/v3';
 

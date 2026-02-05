@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { fetchTop50Coins, connectBinanceWS } from './services/binanceService';
-import CandleChart from './components/CandleChart';
-import { Lang, Coin, EtfState, CandleData, TickerData } from './types';
-import { TRANSLATIONS, BASE_INDEX_VALUE } from './constants';
+import { fetchTop50Coins, connectBinanceWS } from './services/binanceService.ts';
+import CandleChart from './components/CandleChart.tsx';
+import { Lang, Coin, EtfState, CandleData, TickerData } from './types.ts';
+import { TRANSLATIONS, BASE_INDEX_VALUE } from './constants.ts';
 import { Globe, ArrowUp, ArrowDown, Activity, Clock } from 'lucide-react';
 
 // Helper to calculate ETF Price based on weighted sum of constituent changes
@@ -33,6 +33,7 @@ const App = () => {
   const [lang, setLang] = useState<Lang>(Lang.TW);
   const t = TRANSLATIONS[lang];
   
+  const [chartType, setChartType] = useState<'candle' | 'line'>('candle');
   const [coins, setCoins] = useState<Coin[]>([]);
   const [etfState, setEtfState] = useState<EtfState>({
     currentPrice: BASE_INDEX_VALUE,
@@ -279,14 +280,30 @@ const App = () => {
 
           {/* Chart Section */}
           <div className="lg:col-span-3 bg-binance-black rounded-xl border border-binance-gray/20 shadow-xl flex flex-col">
-            <div className="p-4 border-b border-binance-gray/20 flex justify-between items-center">
-              <h3 className="font-semibold text-binance-light flex items-center gap-2">
-                {t.chart} <span className="text-xs font-normal text-binance-text">(1m interval)</span>
-              </h3>
+            <div className="p-4 border-b border-binance-gray/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-4">
+                <h3 className="font-semibold text-binance-light">
+                  {t.chart}
+                </h3>
+                <div className="flex bg-binance-dark p-1 rounded-lg">
+                  <button 
+                    onClick={() => setChartType('line')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartType === 'line' ? 'bg-binance-gray text-white' : 'text-binance-text hover:text-binance-light'}`}
+                  >
+                    Time
+                  </button>
+                  <button 
+                    onClick={() => setChartType('candle')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${chartType === 'candle' ? 'bg-binance-gray text-white' : 'text-binance-text hover:text-binance-light'}`}
+                  >
+                    1m
+                  </button>
+                </div>
+              </div>
               <div className="text-xs text-binance-text">{t.rebalanceInfo}</div>
             </div>
             <div className="flex-1 p-2 min-h-[300px]">
-              <CandleChart data={candleData} />
+              <CandleChart data={candleData} type={chartType} />
             </div>
           </div>
         </div>
